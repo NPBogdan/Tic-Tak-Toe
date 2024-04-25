@@ -5,7 +5,9 @@ const gameBoard = (function(){
     for(let i = 0; i < rows; i++){
         board[i] = [];
         for(let j = 0; j < cols; j++){
-            board[i].push(Square());
+            let random = Math.random() * 10
+            random = random.toFixed(2);
+            board[i].push(Square(random));
         }
     }
 
@@ -26,10 +28,10 @@ const gameBoard = (function(){
     }
 })();
 
-
+// -------------------------------------------------------------------------------------------------------------------
 //A square is just a cell on the board and can be 0 = empty, 1 = player1, 2 = player2
-function Square(){
-    let value = 0;
+function Square(initialCellValue){
+    let value = initialCellValue;
     let playerName = undefined;
     const getPlayerName = function(){ return playerName};
     const setPlayerName = function(name){ playerName = name};
@@ -38,35 +40,38 @@ function Square(){
     return {getValue,setValue,getPlayerName,setPlayerName};
 }
 
-//Verifiy if the game over
+
+// -------------------------------------------------------------------------------------------------------------------
+//Verifiy if the game is over
 function gameStatus(board){
     let gameStatus = {
         status : "playing",
         winner : undefined,
     };
-    console.log(board);
+
     for(let i = 0; i < 3 && gameStatus.status === "playing"; i++){
-        if(board[i][1].getValue() == board[i][2].getValue() && board[i][2].getValue() == board[3].getValue() || 
-        board[1][i].getValue() == board[2][i].getValue() && board[2][i].getValue() == board[3][i].getValue()){
-            console.log(board[i][1].getPlayerName + "wins!");
+    console.log(board[i][1].getValue());
+
+     //If there is a winner to row or collumn we check the diagonals
+     if(gameStatus.status === "playing"){
+        if(board[0][0].getValue() == board[1][1].getValue() && board[1][1].getValue() == board[2][2].getValue() || 
+        board[0][2].getValue() == board[1][1].getValue() && board[1][1].getValue() == board[2][0].getValue()){
+            console.log(board[1][1].getPlayerName() + "wins!");
+            gameStatus.status = "end"; 
+        }
+    }       
+
+        if(board[i][0].getValue() == board[i][1].getValue() && board[i][1].getValue() == board[i][2].getValue() || 
+        board[0][i].getValue() == board[1][i].getValue() && board[1][i].getValue() == board[2][i].getValue()){
+            console.log(board[i][1].getPlayerName() + " wins!");
             gameStatus.status = "end";
             }
         }
 
-    //If there is now winner to row or collumn we check the diagonals
-    if(gameStatus.status === "playing"){
-        if(board[0][0].getValue() == board[1][1].getValue() && board[1][1].getValue() == board[2][2].getValue() || 
-        board[0][2].getValue() == board[1][1].getValue() && board[1][1].getValue() == board[3][0].getValue()){
-            console.log(board[1][1].getPlayerName + "wins!");
-            gameStatus.status = "end"; 
-        }
-    }
-
     return gameStatus;
 }
 
-
-
+// -------------------------------------------------------------------------------------------------------------------
 //The main funcion that will take care of state, player's turn and if the game is over
 function gameController(
     playerOne = "Player 1",
@@ -90,13 +95,15 @@ function gameController(
         let row = parseInt(position.slice(0,1));
         let col = parseInt(position.slice(2));
         
-        if(gameBoard.getBoard()[row][col].getValue() === 0){
+        let currentSelectedPosition = gameBoard.getBoard()[row][col].getValue();
+
+        if(currentSelectedPosition != 1 &&  currentSelectedPosition != 2){
             gameBoard.getBoard()[row][col].setValue(playerTurn.token);
             gameBoard.getBoard()[row][col].setPlayerName(playerTurn.name);
-            console.log(playerTurn.token);
+            console.log(playerTurn.name);
         }
         else {
-            console.log("Pozitie ocupata de " + playerTurn.name + "! \n");
+             console.log("Pozitie ocupata de " + playerTurn.name + "! \n");
         }
         
         //Change the players turn
@@ -114,7 +121,4 @@ function gameController(
     if(endGame == false){
         console.log("Rounds over! No winner boys today!");
     }
-
 }
-
-console.log(gameController("Bogdan","Razvan"));
