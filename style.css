@@ -6,6 +6,11 @@ html,body{
     align-items: center;
 }
 
+#btnStart, #btnReset, #playerTurn{
+    border: medium solid green;
+    margin-right: 50px;
+}
+
 #container{
     display:flex;
     justify-content: center;
@@ -19,4 +24,18 @@ html,body{
     gap: 4px;
     justify-items: center;
     align-items: center;
+    font-weight: 800;
+    font-size: large;
+}
+
+#gameBoard > button {
+    border: medium solid blue;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+#gameBoard > button:active {
+    border: medium solid red;
+    border-radius: 10px;
+    padding: 18px;
 }
