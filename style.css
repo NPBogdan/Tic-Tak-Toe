@@ -12,11 +12,12 @@ body {
 #playerTurn {
     border: medium solid green;
     margin-right: 50px;
+    padding: 1em;
 }
 
-#btnStart:active {
-    opacity: 0.1;
+.btnStartClicked {
     padding: 1em;
+    background-color: saddlebrown;
 }
 
 #btnReset:active {

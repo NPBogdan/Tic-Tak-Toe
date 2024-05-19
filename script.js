@@ -40,11 +40,22 @@ function GameBoard() {
     }
   };
 
+  const resetBoard =
+      function() {
+    board = [];
+    for (let i = 0; i < rows; i++) {
+      board[i] = [];
+      for (let j = 0; j < cols; j++) {
+        let randomInitalValue = Math.random() * 10 + 3;
+        randomInitalValue = randomInitalValue.toFixed(2);
+        board[i].push(Square(randomInitalValue));
+      }
+    };
+  }
+
   const setFreeCell = function(id, playerName, token) {
     let boardLenght = board.length;
-
     let cellIdExists = 0;
-    console.log('DOM ID : ' + id);
     // Check if the board cell id already exists in our board game
     for (let i = 0; i < boardLenght; i++) {
       cellIdExists = board[i].findIndex((cell) => {return cell.getId() == id});
@@ -55,15 +66,6 @@ function GameBoard() {
         return false;
       }
     };
-
-    /*   Set id to a free cell ANOTHER WAY
-      let freeCell = false;
-      for (let i = 0; i < boardLenght; i++) {
-          board[i][freeCell].setValue(token);
-          board[i][freeCell].setPlayerName(playerName);
-          break;
-        }
-      }; */
 
     if (id <= 3) {
       board[0][id - 1].setId(id);
@@ -78,12 +80,20 @@ function GameBoard() {
       board[2][id - 6 - 1].setValue(token);
       board[2][id - 6 - 1].setPlayerName(playerName);
     }
+    /*   Set id to a free cell ANOTHER WAY
+      let freeCell = false;
+      for (let i = 0; i < boardLenght; i++) {
+          board[i][freeCell].setValue(token);
+          board[i][freeCell].setPlayerName(playerName);
+          break;
+        }
+      }; */
   };
 
   const getBoard = () => board;
 
   return {
-    getBoard, setFreeCell
+    getBoard, setFreeCell, resetBoard
   }
 };
 
@@ -136,7 +146,6 @@ function gameController(playerOne = 'Player 1', playerTwo = 'Player 2') {
   let board = GameBoard();
   let players = [{name: playerOne, token: 1}, {name: playerTwo, token: 2}];
   let playerTurn = players[0];
-
   const getPlayerTurn = () => {
     return playerTurn;
   };
@@ -154,26 +163,59 @@ function gameController(playerOne = 'Player 1', playerTwo = 'Player 2') {
   }
 
   return {
-    playRound, getPlayerTurn, boardGame: board.getBoard()
+    playRound, getPlayerTurn, boardGame: board.getBoard(),
+        resetBoard: board.resetBoard
   }
 }
 
 /* ------------------------------------------------------------------------------------------------------------------
 The function to update DOM and state of the game */
 function ScreenController() {
-  const game = gameController();
+  let game = gameController();
   const boardCells = document.querySelectorAll('#gameBoard > button');
   const playerParagraph = document.querySelector('#playerTurn')
-
+  const startButton = document.querySelector('#btnStart');
   playerParagraph.textContent = `${game.getPlayerTurn().name}'s turn`;
 
-  function activateCell() {
+  // Here we just "activate" the board so players can click them
+  startButton.addEventListener('click', function() {
+    boardCells.forEach((e) => {
+      e.removeAttribute('disabled');
+    })
+    activateCell(game);
+  })
+
+  startButton.addEventListener('click', (e) => {
+    e.target.classList.add('btnStartClicked');
+  })
+
+  // Reset the game @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  document.querySelector('#btnReset').addEventListener('click', () => {
+    game.resetBoard();
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        console.log(game.boardGame[i][j].getValue());
+      }
+    }
+    playerParagraph.textContent = `${game.getPlayerTurn().name}'s turn`;
+    startButton.classList.remove('btnStartClicked');
+
+    // Reset to UI board
+    boardCells.forEach((uiCell) => {
+      uiCell.textContent = '---';
+      // uiCell.setAttribute('disabled', true);
+      uiCell.removeEventListener('click', () => {console.log(`TEST`)});
+    });
+
+    activateCell(game);
+  })
+
+  function activateCell(actualGame) {
     boardCells.forEach(function(cell) {
       cell.addEventListener('click', function(e) {
         buttonId = e.target.getAttribute('data-id');
         e.target.setAttribute('disabled', true);
-        // e.target.textContent = game.getPlayerTurn().token;
-        let gameStatus = game.playRound(buttonId);
+        let gameStatus = actualGame.playRound(buttonId);
 
         // If the game is over
         if (gameStatus.finalStatus.status === 'end') {
@@ -186,11 +228,13 @@ function ScreenController() {
         } else if (gameStatus.finalStatus.status === 'draw') {
           playerParagraph.textContent = `Its a draw!`;
         }
-
-        updateScreenBoard(game);
+        playerParagraph.textContent =
+            `${actualGame.getPlayerTurn().name}'s turn`;
+        updateScreenBoard(actualGame);
       })
     })
   }
+
   // We update the UI board with the current state of the game
   function updateScreenBoard(board) {
     board.boardGame.forEach(function(row) {
@@ -206,11 +250,6 @@ function ScreenController() {
       })
     });
   }
-
-  // Here we just "activate" the board so players can click them
-  document.querySelector('#btnStart').addEventListener('click', function() {
-    activateCell();
-  })
 }
 
 console.log(ScreenController());
