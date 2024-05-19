@@ -1,6 +1,6 @@
-// -------------------------------------------------------------------------------------------------------------------
-// A square is just a cell on the board and can be "random" = empty,
-// 1 = player1, 2 = player2
+/* -------------------------------------------------------------------------------------------------------------------
+A square is just a cell on the board and can be "random" = empty,
+1 = player1, 2 = player2 */
 function Square(randomInitalValue) {
   let id = 0;
   let value = randomInitalValue;
@@ -42,6 +42,7 @@ function GameBoard() {
 
   const setFreeCell = function(id, playerName, token) {
     let boardLenght = board.length;
+
     let cellIdExists = 0;
     console.log('DOM ID : ' + id);
     // Check if the board cell id already exists in our board game
@@ -58,9 +59,6 @@ function GameBoard() {
     /*   Set id to a free cell ANOTHER WAY
       let freeCell = false;
       for (let i = 0; i < boardLenght; i++) {
-        freeCell = board[i].findIndex((cell) => {return cell.getId() == 0});
-        if (freeCell != -1) {
-          board[i][freeCell].setId(id);
           board[i][freeCell].setValue(token);
           board[i][freeCell].setPlayerName(playerName);
           break;
@@ -98,14 +96,6 @@ function gameStatus(board) {
   };
 
   for (let i = 0; i < 3 && gameStatus.status === 'playing'; i++) {
-    /* for (let i = 0; i < board.length; i++) {
-     for (let j = 0; j < board.length; j++) {
-       console.log(board[i][j].getId());
-     }
-     console.log(`\n`);
-     ;
-   }  */
-
     // We check the DIAGONALS
     if (board[0][0].getValue() == board[1][1].getValue() &&
             board[1][1].getValue() == board[2][2].getValue() ||
@@ -125,13 +115,23 @@ function gameStatus(board) {
       gameStatus.status = 'end';
       gameStatus.winner = board[i][1].getPlayerName();
     }
+
+    // We check if there are no more spaces
+    let freeSpace;
+    for (let j = 0; j < board[i].length; j++) {
+      freeSpace = board[i].every((cell) => cell.getId() != 0);
+    }
+    if (freeSpace) {
+      gameStatus.status = 'draw';
+      return gameStatus;
+    }
   }
   return gameStatus;
 }
 
-// -------------------------------------------------------------------------------------------------------------------
-// The main funcion that will take care of state, player's turn and if the game
-// is over
+/* -------------------------------------------------------------------------------------------------------------------
+The main funcion that will take care of state, player's turn and if the game
+is over */
 function gameController(playerOne = 'Player 1', playerTwo = 'Player 2') {
   let board = GameBoard();
   let players = [{name: playerOne, token: 1}, {name: playerTwo, token: 2}];
@@ -143,11 +143,7 @@ function gameController(playerOne = 'Player 1', playerTwo = 'Player 2') {
 
   function playRound(cellId) {
     // Set the cell
-    let freeCell = board.setFreeCell(cellId, playerTurn.name, playerTurn.token);
-    if (freeCell == false) {
-      console.log(`This position is ocupied or no more spaces left!`);
-      return false;
-    }
+    board.setFreeCell(cellId, playerTurn.name, playerTurn.token);
 
     // Change the player's turn
     playerTurn = playerTurn === players[0] ? players[1] : players[0];
@@ -162,8 +158,8 @@ function gameController(playerOne = 'Player 1', playerTwo = 'Player 2') {
   }
 }
 
-//------------------------------------------------------------------------------------------------------------------
-// The function to update DOM and state of the game
+/* ------------------------------------------------------------------------------------------------------------------
+The function to update DOM and state of the game */
 function ScreenController() {
   const game = gameController();
   const boardCells = document.querySelectorAll('#gameBoard > button');
@@ -176,7 +172,7 @@ function ScreenController() {
       cell.addEventListener('click', function(e) {
         buttonId = e.target.getAttribute('data-id');
         e.target.setAttribute('disabled', true);
-        e.target.textContent = game.getPlayerTurn().token;
+        // e.target.textContent = game.getPlayerTurn().token;
         let gameStatus = game.playRound(buttonId);
 
         // If the game is over
@@ -187,19 +183,28 @@ function ScreenController() {
           boardCells.forEach(function(cell) {
             cell.setAttribute('disabled', true);
           })
+        } else if (gameStatus.finalStatus.status === 'draw') {
+          playerParagraph.textContent = `Its a draw!`;
         }
+
+        updateScreenBoard(game);
       })
     })
   }
-
-  if (gameStatus(game.boardGame).status === 'end') {
-    playerParagraph.textContent = `Its a draw!`;
-  }
-
+  // We update the UI board with the current state of the game
   function updateScreenBoard(board) {
-    let playTurnDiv = document.querySelector('#playerTurn');
-    playTurnDiv.textContent =
-        `${game.getPlayerTurn()} turn now, please click a cell:`;
+    board.boardGame.forEach(function(row) {
+      row.forEach((cell) => {
+        let cellId = cell.getId();
+        if (cellId != 0) {
+          if (cell.getValue() === 1) {
+            boardCells[cellId - 1].textContent = `X`;
+          } else {
+            boardCells[cellId - 1].textContent = `O`;
+          }
+        }
+      })
+    });
   }
 
   // Here we just "activate" the board so players can click them
@@ -209,7 +214,3 @@ function ScreenController() {
 }
 
 console.log(ScreenController());
-
-// let position = prompt("Enter row and column (From 0 to 2):");
-// let row = parseInt(position.slice(0,1));
-// let col = parseInt(position.slice(2));
