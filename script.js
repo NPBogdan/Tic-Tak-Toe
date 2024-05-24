@@ -24,7 +24,22 @@ function Square(randomInitalValue) {
   const setValue = (token) => {
     value = token
   };
-  return {getValue, setValue, getPlayerName, setPlayerName, getId, setId};
+  const reset = function() {
+    id = 0;
+    value = Math.random() * 10 + 3;
+    value = value.toFixed(2);
+    playerName = '';
+  };
+
+  return {
+    getValue,
+    setValue,
+    getPlayerName,
+    setPlayerName,
+    getId,
+    setId,
+    reset
+  };
 }
 
 function GameBoard() {
@@ -42,13 +57,9 @@ function GameBoard() {
 
   const resetBoard =
       function() {
-    board = [];
     for (let i = 0; i < rows; i++) {
-      board[i] = [];
       for (let j = 0; j < cols; j++) {
-        let randomInitalValue = Math.random() * 10 + 3;
-        randomInitalValue = randomInitalValue.toFixed(2);
-        board[i].push(Square(randomInitalValue));
+        board[i][j].reset();
       }
     };
   }
@@ -177,61 +188,45 @@ function ScreenController() {
   const startButton = document.querySelector('#btnStart');
   playerParagraph.textContent = `${game.getPlayerTurn().name}'s turn`;
 
-  // Here we just "activate" the board so players can click them
-  startButton.addEventListener('click', function() {
-    boardCells.forEach((e) => {
-      e.removeAttribute('disabled');
-    })
-    activateCell(game);
-  })
 
-  startButton.addEventListener('click', (e) => {
-    e.target.classList.add('btnStartClicked');
-  })
+  const setCell = (event) => {
+    buttonId = event.target.getAttribute('data-id');
+    event.target.setAttribute('disabled', true);
+    let gameStatus = game.playRound(buttonId);
 
-  // Reset the game @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // If the game is over
+    if (gameStatus.finalStatus.status === 'end') {
+      playerParagraph.textContent =
+          `${gameStatus.finalStatus.winner} wins the game!`;
+
+      boardCells.forEach(function(cell) {
+        cell.setAttribute('disabled', true);
+      })
+    } else if (gameStatus.finalStatus.status === 'draw') {
+      playerParagraph.textContent = `Its a draw!`;
+    }
+    playerParagraph.textContent = `${game.getPlayerTurn().name}'s turn`;
+    updateScreenBoard(game);
+  };
+
+  // Reset the game
   document.querySelector('#btnReset').addEventListener('click', () => {
     game.resetBoard();
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
-        console.log(game.boardGame[i][j].getValue());
-      }
-    }
     playerParagraph.textContent = `${game.getPlayerTurn().name}'s turn`;
     startButton.classList.remove('btnStartClicked');
 
-    // Reset to UI board
     boardCells.forEach((uiCell) => {
       uiCell.textContent = '---';
-      // uiCell.setAttribute('disabled', true);
-      uiCell.removeEventListener('click', () => {console.log(`TEST`)});
+      uiCell.setAttribute('disabled', true);
+      uiCell.removeEventListener('click', setCell);
     });
-
-    activateCell(game);
+    activateCell();
   })
 
-  function activateCell(actualGame) {
+  // Activate board cells
+  function activateCell() {
     boardCells.forEach(function(cell) {
-      cell.addEventListener('click', function(e) {
-        buttonId = e.target.getAttribute('data-id');
-        e.target.setAttribute('disabled', true);
-        let gameStatus = actualGame.playRound(buttonId);
-
-        // If the game is over
-        if (gameStatus.finalStatus.status === 'end') {
-          playerParagraph.textContent =
-              `${gameStatus.finalStatus.winner} wins the game!`;
-          let boardCells = document.querySelectorAll('#gameBoard > button');
-          boardCells.forEach(function(cell) {
-            cell.setAttribute('disabled', true);
-          })
-        } else if (gameStatus.finalStatus.status === 'draw') {
-          playerParagraph.textContent = `Its a draw!`;
-        }
-        playerParagraph.textContent =
-            `${actualGame.getPlayerTurn().name}'s turn`;
-        updateScreenBoard(actualGame);
-      })
+      cell.addEventListener('click', setCell);
     })
   }
 
@@ -250,6 +245,15 @@ function ScreenController() {
       })
     });
   }
+
+  // Here we just "activate" the board so players can click them
+  startButton.addEventListener('click', function(event) {
+    boardCells.forEach((element) => {
+      element.removeAttribute('disabled');
+    })
+    event.target.classList.add('btnStartClicked');
+    activateCell();
+  })
 }
 
 console.log(ScreenController());
