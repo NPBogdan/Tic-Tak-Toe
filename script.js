@@ -130,25 +130,31 @@ function gameStatus(board) {
     }
     // We check the lines and columns
     if (board[i][0].getValue() == board[i][1].getValue() &&
-            board[i][1].getValue() == board[i][2].getValue() ||
-        board[0][i].getValue() == board[1][i].getValue() &&
-            board[1][i].getValue() == board[2][i].getValue()) {
+        board[i][1].getValue() == board[i][2].getValue()) {
       console.log(board[i][1].getPlayerName() + ' wins!');
       gameStatus.status = 'end';
       gameStatus.winner = board[i][1].getPlayerName();
+      break;
+    } else if (
+        board[0][i].getValue() == board[1][i].getValue() &&
+        board[1][i].getValue() == board[2][i].getValue()) {
+      console.log(board[1][i].getPlayerName() + ' wins!');
+      gameStatus.status = 'end';
+      gameStatus.winner = board[1][i].getPlayerName();
+      break;
     }
 
-
     // We check if there are no more spaces
-    for (let j = 0; j < board[i].length; j++) {
-      freeSpace = board[i].every((cell) => cell.getId() != 0);
+    for (let j = 0; j < board[i].length && !freeSpace; j++) {
+      freeSpace = board[i].some((cell) => cell.getId() == 0);
     }
   }
 
-  if (freeSpace) {
+  if (!freeSpace && gameStatus.status == 'playing') {
     gameStatus.status = 'draw';
     return gameStatus;
   }
+
   return gameStatus;
 }
 
@@ -252,12 +258,17 @@ function ScreenController() {
       boardCells.forEach(function(cell) {
         cell.setAttribute('disabled', true);
       })
+      updateScreenBoard(game);
+      return;
+
     } else if (gameStatus.finalStatus.status === 'draw') {
       console.log(gameStatus.finalStatus.status);
       playerParagraph.textContent = `Its a draw!`;
       boardCells.forEach(function(cell) {
         cell.setAttribute('disabled', true);
       })
+      updateScreenBoard(game);
+      return;
     }
     playerParagraph.textContent = `${game.getPlayerTurn().name}'s turn`;
     updateScreenBoard(game);
@@ -278,11 +289,6 @@ function ScreenController() {
       })
     });
   }
-
-  /* document.querySelector('dialog > form')
-      .addEventListener('submit', function(e) {
-        e.preventDefault();
-      }) */
 
   // Here we just "activate" the board so players can click them
   startButton.addEventListener('click', function(event) {

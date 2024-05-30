@@ -45,7 +45,7 @@ body {
 #gameBoard>button {
     border: medium solid blue;
     border-radius: 10px;
-    padding: 20px;
+    padding: 30px;
 }
 
 #gameBoard>button:active {
