@@ -116,6 +116,7 @@ function gameStatus(board) {
     winner: undefined,
   };
 
+  let freeSpace = false;
   for (let i = 0; i < 3 && gameStatus.status === 'playing'; i++) {
     // We check the DIAGONALS
     if (board[0][0].getValue() == board[1][1].getValue() &&
@@ -137,15 +138,16 @@ function gameStatus(board) {
       gameStatus.winner = board[i][1].getPlayerName();
     }
 
+
     // We check if there are no more spaces
-    let freeSpace;
     for (let j = 0; j < board[i].length; j++) {
       freeSpace = board[i].every((cell) => cell.getId() != 0);
     }
-    if (freeSpace) {
-      gameStatus.status = 'draw';
-      return gameStatus;
-    }
+  }
+
+  if (freeSpace) {
+    gameStatus.status = 'draw';
+    return gameStatus;
   }
   return gameStatus;
 }
@@ -159,6 +161,14 @@ function gameController(playerOne = 'Player 1', playerTwo = 'Player 2') {
   let playerTurn = players[0];
   const getPlayerTurn = () => {
     return playerTurn;
+  };
+  const setPlayersName = function(player1, player2) {
+    players[0].name = player1;
+    players[1].name = player2;
+  };
+  const resetPlayerTurn = () => {
+    return playerTurn = players[0];
+    ;
   };
 
   function playRound(cellId) {
@@ -175,19 +185,59 @@ function gameController(playerOne = 'Player 1', playerTwo = 'Player 2') {
 
   return {
     playRound, getPlayerTurn, boardGame: board.getBoard(),
-        resetBoard: board.resetBoard
+        resetBoard: board.resetBoard, resetPlayerTurn, setPlayersName
   }
 }
 
 /* ------------------------------------------------------------------------------------------------------------------
 The function to update DOM and state of the game */
 function ScreenController() {
+  document.addEventListener('DOMContentLoaded', function() {
+    dialog.showModal();
+  })
+
+  const welcomeH1 = document.querySelector('dialog > form > h1');
+  setTimeout(function() {
+    welcomeH1.remove();
+  }, 4000);
+
   let game = gameController();
   const boardCells = document.querySelectorAll('#gameBoard > button');
   const playerParagraph = document.querySelector('#playerTurn')
   const startButton = document.querySelector('#btnStart');
+  const dialog = document.querySelector('#dialog');
   playerParagraph.textContent = `${game.getPlayerTurn().name}'s turn`;
 
+  // Get and set dialog players name
+  const getSetDialogPlayerNames = function() {
+    let player1 = document.querySelector('#player1').value;
+    let player2 = document.querySelector('#player2').value;
+    if (player1 != '' && player2 != '') {
+      game.setPlayersName(player1, player2);
+    }
+  };
+
+  // Reset the game
+  document.querySelector('#btnReset').addEventListener('click', () => {
+    dialog.showModal();
+    game.resetBoard();
+    game.resetPlayerTurn();
+
+    startButton.classList.remove('btnStartClicked');
+
+    boardCells.forEach((uiCell) => {
+      uiCell.textContent = '---';
+      uiCell.setAttribute('disabled', true);
+      uiCell.removeEventListener('click', setCell);
+    });
+  })
+
+  // Activate board cells
+  function activateCell() {
+    boardCells.forEach(function(cell) {
+      cell.addEventListener('click', setCell);
+    })
+  }
 
   const setCell = (event) => {
     buttonId = event.target.getAttribute('data-id');
@@ -203,32 +253,15 @@ function ScreenController() {
         cell.setAttribute('disabled', true);
       })
     } else if (gameStatus.finalStatus.status === 'draw') {
+      console.log(gameStatus.finalStatus.status);
       playerParagraph.textContent = `Its a draw!`;
+      boardCells.forEach(function(cell) {
+        cell.setAttribute('disabled', true);
+      })
     }
     playerParagraph.textContent = `${game.getPlayerTurn().name}'s turn`;
     updateScreenBoard(game);
   };
-
-  // Reset the game
-  document.querySelector('#btnReset').addEventListener('click', () => {
-    game.resetBoard();
-    playerParagraph.textContent = `${game.getPlayerTurn().name}'s turn`;
-    startButton.classList.remove('btnStartClicked');
-
-    boardCells.forEach((uiCell) => {
-      uiCell.textContent = '---';
-      uiCell.setAttribute('disabled', true);
-      uiCell.removeEventListener('click', setCell);
-    });
-    activateCell();
-  })
-
-  // Activate board cells
-  function activateCell() {
-    boardCells.forEach(function(cell) {
-      cell.addEventListener('click', setCell);
-    })
-  }
 
   // We update the UI board with the current state of the game
   function updateScreenBoard(board) {
@@ -246,12 +279,20 @@ function ScreenController() {
     });
   }
 
+  /* document.querySelector('dialog > form')
+      .addEventListener('submit', function(e) {
+        e.preventDefault();
+      }) */
+
   // Here we just "activate" the board so players can click them
   startButton.addEventListener('click', function(event) {
     boardCells.forEach((element) => {
       element.removeAttribute('disabled');
     })
     event.target.classList.add('btnStartClicked');
+    getSetDialogPlayerNames();
+    playerParagraph.textContent = `${game.getPlayerTurn().name}'s turn`;
+    dialog.close();
     activateCell();
   })
 }

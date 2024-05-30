@@ -9,7 +9,22 @@
 </head>
 
 <body>
-    <button id="btnStart"> Start Game</button>
+    <dialog id="dialog">
+        <form action="" id="dialogForm" method="dialog">
+            <h1>Welcome</h1>
+            <div>
+                <label for="player1">Player 1</label>
+                <input type="text" name="player1" id="player1">
+            </div>
+            <br>
+            <div><label for="player2">Player 2</label>
+                <input type="text" name="player2" id="player2">
+            </div>
+            <br>
+            <button id="btnStart"> Start Game</button>
+        </form>
+    </dialog>
+
     <button id="btnReset"> Reset</button>
     <p id="playerTurn"></p>
     <div id="container">
